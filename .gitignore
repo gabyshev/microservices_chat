@@ -5,3 +5,4 @@ api/log/*
 !/api/log/.keep
 api/tmp
 .DS_Store
+web/node_modules
