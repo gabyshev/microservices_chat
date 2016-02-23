@@ -1,0 +1,17 @@
+{
+  "name": "websocket_server",
+  "version": "0.1.0",
+  "description": "Microservice for handling async websockets functionality for chat app.",
+  "author": "Semyen Gabyshev <gabyshev.sa@gmail.com>",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js"
+  },
+  "dependencies": {
+    "faye": "~1.1",
+    "express": "~4.13",
+    "morgan": "~1.7",
+    "path": "~0.12",
+    "http-proxy": "~1.13"
+  }
+}
