@@ -1,4 +1,45 @@
 angular.module('chatApp', ['ngRoute'])
+  .config(function ($routeProvider, $locationProvider) {
+    $locationProvider.html5Mode({enabled: true, requireBase: false});
+    $routeProvider
+      .when('/sign_in', {
+        templateUrl: "sign_in.html",
+        controller: "SignInCtrl"
+      })
+      .when('/sign_up', {
+        templateUrl: 'sign_up.html',
+        controller: 'SignUpCtrl'
+      })
+      .when('/chat', {
+        templateUrl: 'chat.html',
+        controller: 'ChatCtrl',
+        resolve: {
+          auth: ["$q", "authFactory", function ($q, authFactory) {
+            var userInfo = authFactory.getUserInfo();
+
+            if (userInfo) {
+              return $q.when(userInfo)
+            } else {
+              return $q.reject({ authenticated: false });
+            }
+          }]
+        }
+      })
+      .otherwise({
+        resolve: {
+          auth: ["$q", "authFactory", function ($q, authFactory) {
+            var userInfo = authFactory.getUserInfo();
+
+            if (userInfo) {
+              return $q.when(userInfo)
+            } else {
+              return $q.reject({ authenticated: false });
+            }
+          }]
+        }
+      })
+  })
+
   .factory('authFactory', function($http, $q, $window) {
     var userInfo;
 
