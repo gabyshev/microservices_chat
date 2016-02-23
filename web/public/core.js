@@ -7,6 +7,37 @@ angular.module('chatApp', ['ngRoute'])
     });
   }])
 
+  .controller('MainCtrl', function($scope, $location) {
+  })
+  .controller('ChatCtrl', function($scope, $location) {
+  })
+  .controller('SignUpCtrl', ["$scope", "$location", "authFactory", function ($scope, $location, authFactory) {
+    $scope.userInfo = "blabla";
+    $scope.signUp = function () {
+      authFactory.signUp($scope.email, $scope.password, $scope.passwordConfirmation)
+        .then(function (result) {
+          console.log(result);
+          $location.path("/sign_in");
+        }, function (error) {
+          alert("Error: " + error.statusText);
+          console.log(error);
+        })
+    };
+  }])
+  .controller('SignInCtrl', ["$scope", "$location", "authFactory", function ($scope, $location, authFactory) {
+    $scope.userInfo = null;
+    $scope.login = function () {
+      authFactory.login($scope.email, $scope.password)
+        .then(function (result) {
+          $scope.userInfo = result;
+          $location.path("/chat");
+        }, function (error) {
+          alert("Error: " + error.statusText);
+          console.log(error);
+        })
+    };
+  }])
+
   .config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
