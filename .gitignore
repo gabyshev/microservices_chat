@@ -1,0 +1,7 @@
+business_logic/.bundle
+business_logic/db/*.sqlite3
+business_logic/db/*.sqlite3-journal
+business_logic/log/*
+!/business_logic/log/.keep
+business_logic/tmp
+.DS_Store
