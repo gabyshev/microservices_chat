@@ -1,4 +1,12 @@
 angular.module('chatApp', ['ngRoute'])
+  .run(["$rootScope", "$location", function ($rootScope, $location) {
+    $rootScope.$on("$routeChangeError", function (event, current, previous, eventObj) {
+      if (eventObj.authenticated === false) {
+        $location.path("/sign_in");
+      }
+    });
+  }])
+
   .config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
