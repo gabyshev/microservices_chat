@@ -22,6 +22,20 @@ app.use(morgan('combined'));
 app.use(express.static(path.join(config.root_path, 'public')));
 app.set('appPath', path.join(config.root_path, 'public'));
 
+// proxy
+var apiProxy = httpProxy.createProxyServer();
+apiProxy.on('error', function (err, req, res) {
+  console.log("connection problem");
+  res.writeHead(500, { 'Content-Type': 'text/plain' });
+  res.end(err.message);
+})
+
+// routes
+app.all('/api/*', function (req, res) {
+  req.url = req.url.replace(/\/api/, '');
+  apiProxy.web(req, res, { target: config.api_uri });
+});
+
 app.route('/*').get(function (req, res) {
   res.sendFile(path.join(app.get('appPath'), 'index.html'));
 });
