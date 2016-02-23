@@ -1,0 +1,18 @@
+<h2>Sign in</h2>
+
+<form>
+  <div class="field">
+    <label for="user_email">Email</label><br />
+    <input autofocus="autofocus" type="email" value="" name="user[email]" id="user_email" ng-model="email" />
+  </div>
+
+  <div class="field">
+    <label for="user_password">Password</label><br />
+    <input autocomplete="off" type="password" name="user[password]" id="user_password" ng-model="password" />
+  </div>
+
+  <div class="actions">
+    <input type="submit" name="commit" value="Log in" ng-click="login()" />
+  </div>
+</form>
+<a href="/sign_up">Sign up</a>
