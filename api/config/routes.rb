@@ -3,5 +3,5 @@ Rails.application.routes.draw do
     sessions: 'users/sessions'
   }
 
-  get 'api/test', to: 'api#test'
+  resources :conversations, only: :index
 end
