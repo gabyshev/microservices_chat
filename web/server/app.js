@@ -22,6 +22,10 @@ app.use(morgan('combined'));
 app.use(express.static(path.join(config.root_path, 'public')));
 app.set('appPath', path.join(config.root_path, 'public'));
 
+app.route('/*').get(function (req, res) {
+  res.sendFile(path.join(app.get('appPath'), 'index.html'));
+});
+
 //create actual server and attach faye
 var server = http.createServer(app);
 var port = 8080;
