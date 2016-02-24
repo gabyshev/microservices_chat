@@ -5,11 +5,13 @@ var path    = require('path'),
     faye    = require('faye'),
     morgan  = require('morgan'),
     express = require('express'),
+    bodyParser = require('body-parser'),
     httpProxy = require('http-proxy');
 
 // main objects
 var app = express();
 var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 25});
+var jsonParser = bodyParser.json();
 
 // config json
 var config = {
@@ -31,6 +33,11 @@ apiProxy.on('error', function (err, req, res) {
 })
 
 // routes
+app.post('/message', jsonParser, function (req, res) {
+  bayeux.getClient().publish('/conversation/' + req.body.conversation_id, req.body.message);
+  res.sendStatus(200);
+});
+
 app.all('/api/*', function (req, res) {
   req.url = req.url.replace(/\/api/, '');
   apiProxy.web(req, res, { target: config.api_uri });
