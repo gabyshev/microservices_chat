@@ -1,7 +1,8 @@
-business_logic/.bundle
-business_logic/db/*.sqlite3
-business_logic/db/*.sqlite3-journal
-business_logic/log/*
-!/business_logic/log/.keep
-business_logic/tmp
+api/.bundle
+api/db/*.sqlite3
+api/db/*.sqlite3-journal
+api/log/*
+!/api/log/.keep
+api/tmp
 .DS_Store
+web/node_modules

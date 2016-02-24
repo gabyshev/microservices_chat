@@ -1,0 +1,18 @@
+<h2>Users available for chat:</h2>
+<div ng-if="users.length > 0">
+  <ul>
+    <li ng-repeat="user in users">
+      <a href="#" ng-click="startChatWith(user)">{{::user.email}}</a>
+    </li>
+  </ul>
+</div>
+<h2>Chat</h2>
+<div id="chat" ng-show="currentChat">
+  <ul ng-if="messages.length > 0">
+    <li ng-repeat="message in messages">{{::message.body}} <i>{{::message.from}}</i></li>
+  </ul>
+   <form id='new_message' name="messageForm">
+    <input type='text' autofocus="autofocus" name='message[body]' id='message_body' ng-model="messageBody">
+    <input type='submit' name='commit' value='Send' ng-click="sendMessage(currentChat)">
+  </form>
+</div>

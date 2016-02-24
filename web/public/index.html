@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html ng-app="chatApp">
+  <head>
+    <meta charset="utf-8">
+    <title>Chat application using microservices</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-resource.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-route.min.js"></script>
+    <script src="/faye/client.js"></script>
+    <script src="core.js"></script>
+  </head>
+  <body>
+    <div ng-controller="MainCtrl">
+      <h1>Chat application</h1>
+      <div ng-view=""></div>
+    </div>
+  </body>
+</html>
