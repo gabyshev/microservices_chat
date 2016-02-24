@@ -1,5 +1,6 @@
 require 'jwt'
 
+# Модуль для выпуска и провери валидности JWT токенов, токены выпускаются на 1 сутки
 module AuthToken
   def self.issue_token(payload)
     payload['exp'] = 24.hours.from_now.to_i

@@ -1,4 +1,6 @@
 angular.module('chatApp', ['ngRoute'])
+  // если запрос не авторизованный, перенаправлять на sign_in
+  // будучи не авторизованным пользователь может посетить только sign_in или sign_up
   .run(["$rootScope", "$location", function ($rootScope, $location) {
     $rootScope.$on("$routeChangeError", function (event, current, previous, eventObj) {
       if (eventObj.authenticated === false) {
@@ -9,11 +11,13 @@ angular.module('chatApp', ['ngRoute'])
 
   .controller('MainCtrl', function($scope, $location) {
   })
+  // основной контроллер реализующий логику чата
   .controller('ChatCtrl', ["$scope", "chatFactory", function($scope, chatFactory) {
     $scope.websocket_client = new Faye.Client("/faye");
     $scope.currentChat = null;
     $scope.currentSubscription = null;
 
+    // если объет "текущий чат" меняется, то отписывается от текущей подписки на канал и подписываемся на новый
     $scope.$watch("currentChat", function (newValue, oldValue) {
       if (newValue === oldValue) {
         return;
@@ -27,6 +31,7 @@ angular.module('chatApp', ['ngRoute'])
       });
     });
 
+    // при инициализации контроллера подтягиваем сразу список доступных для чата пользователей
     function activate() {
       chatFactory.getUsers().then(function (result){
         $scope.users = result.data;
@@ -53,8 +58,10 @@ angular.module('chatApp', ['ngRoute'])
       })
     }
 
+    //  инициализируем чат контроллер
     activate();
   }])
+  // контроллеры SignUpCtrl и SignInCtrl  тянут запросы по авторизации и регистрации с фактори authFactory
   .controller('SignUpCtrl', ["$scope", "$location", "authFactory", function ($scope, $location, authFactory) {
     $scope.signUp = function () {
       authFactory.signUp($scope.email, $scope.password, $scope.passwordConfirmation)
@@ -80,6 +87,8 @@ angular.module('chatApp', ['ngRoute'])
     };
   }])
 
+  // Роуты фронтенд приложеиня
+  // без авторизации можно зайти только на sign_up/sign_in в остальных случаях будет редирект на sign_in
   .config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
@@ -121,10 +130,14 @@ angular.module('chatApp', ['ngRoute'])
       })
   })
 
+  // Фактори для работы с базой Чатов(Conversation) и Сообщений
   .factory('chatFactory', function ($http, $q, authFactory) {
     var credentials = authFactory.getUserInfo();
+    // Передаем в хедерах аутентификационные данные вида:
+    // Authorization: Bearer my@email.ru MYTOKEN
     $http.defaults.headers.common.Authorization = "Bearer " + credentials.email + " " + credentials.token;
 
+    // Паблиш сообщения по вебсокетам
     function publishMessage(data) {
       $http.post("/message", {
         conversation_id: data.conversation_id,
@@ -135,6 +148,8 @@ angular.module('chatApp', ['ngRoute'])
       });
     };
 
+    // При общении с API сервер используется  Deferred объекты
+    // функция создания сообщения в чате
     function sendMessage(chat_id, messageBody) {
       var deferred = $q.defer();
       $http.post("api/conversations/" + chat_id + "/messages.json", {
@@ -151,6 +166,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     };
 
+    // подгрузка сообщений с текущего чата
     function loadMessages(chat_id) {
       var deferred = $q.defer();
       $http.get("api/conversations/" + chat_id + "/messages.json")
@@ -162,6 +178,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     }
 
+    //  подгрузка доступных юзеров для чата
     function getUsers(){
       var deferred = $q.defer();
       $http.get("api/conversations.json")
@@ -173,6 +190,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     };
 
+    // получаение объекта Conversation
     function getConversation(user) {
       var deferred = $q.defer();
       $http.post("api/conversations.json", {
@@ -195,9 +213,12 @@ angular.module('chatApp', ['ngRoute'])
     };
   })
 
+  // Фактори отвечающий за регистрацию и логин пользователей
   .factory('authFactory', function($http, $q, $window) {
     var userInfo;
 
+    // в  userInfo лежит информация о текущей сессии пользователя: токен, почта и id пользователя
+    // переменная userInfo инициализируется сразу, наполняется данными при успешном логине и сохраняется в SessionStorage браузера
     function getUserInfo() {
       return userInfo;
     }
@@ -243,6 +264,8 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     }
 
+    // в userInfo всегда лежат актуальные данные, например при рефреше страницы
+    // функция init() обновляет переменную
     function init() {
       if ($window.sessionStorage["userInfo"]) {
         userInfo = JSON.parse($window.sessionStorage["userInfo"]);
