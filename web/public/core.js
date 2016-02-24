@@ -9,14 +9,56 @@ angular.module('chatApp', ['ngRoute'])
 
   .controller('MainCtrl', function($scope, $location) {
   })
-  .controller('ChatCtrl', function($scope, $location) {
-  })
+  .controller('ChatCtrl', ["$scope", "chatFactory", function($scope, chatFactory) {
+    $scope.websocket_client = new Faye.Client("/faye");
+    $scope.currentChat = null;
+    $scope.currentSubscription = null;
+
+    $scope.$watch("currentChat", function (newValue, oldValue) {
+      if (newValue === oldValue) {
+        return;
+      }
+      if ($scope.currentSubscription) {
+        $scope.currentSubscription.cancel();
+      }
+      $scope.currentSubscription = $scope.websocket_client.subscribe("/conversation/" + newValue.id, function (data) {
+        $scope.messages.push(data);
+        $scope.$apply();
+      });
+    });
+
+    function activate() {
+      chatFactory.getUsers().then(function (result){
+        $scope.users = result.data;
+      });
+    };
+
+    function loadMessages(chat_id) {
+      chatFactory.loadMessages(chat_id).then(function (result) {
+        $scope.messages = result.data;
+      })
+    };
+
+    $scope.startChatWith = function(user) {
+      chatFactory.getConversation(user).then(function (result) {
+        $scope.currentChat = result.data;
+        loadMessages(result.data.id)
+      });
+    };
+
+    $scope.sendMessage = function (chat) {
+      chatFactory.sendMessage(chat.id, $scope.messageBody).then(function (result) {
+        $scope.messageBody = null;
+        chatFactory.publishMessage(result.data);
+      })
+    }
+
+    activate();
+  }])
   .controller('SignUpCtrl', ["$scope", "$location", "authFactory", function ($scope, $location, authFactory) {
-    $scope.userInfo = "blabla";
     $scope.signUp = function () {
       authFactory.signUp($scope.email, $scope.password, $scope.passwordConfirmation)
         .then(function (result) {
-          console.log(result);
           $location.path("/sign_in");
         }, function (error) {
           alert("Error: " + error.statusText);
@@ -79,6 +121,80 @@ angular.module('chatApp', ['ngRoute'])
       })
   })
 
+  .factory('chatFactory', function ($http, $q, authFactory) {
+    var credentials = authFactory.getUserInfo();
+    $http.defaults.headers.common.Authorization = "Bearer " + credentials.email + " " + credentials.token;
+
+    function publishMessage(data) {
+      $http.post("/message", {
+        conversation_id: data.conversation_id,
+        message: {
+          body: data.body,
+          from: authFactory.getUserInfo().email
+        }
+      });
+    };
+
+    function sendMessage(chat_id, messageBody) {
+      var deferred = $q.defer();
+      $http.post("api/conversations/" + chat_id + "/messages.json", {
+        conversation_id: chat_id,
+        message: {
+          body: messageBody,
+          user_id: authFactory.getUserInfo().id
+        }
+      }).then(function (result) {
+        deferred.resolve(result);
+      }, function (error) {
+        deferred.reject(error);
+      })
+      return deferred.promise;
+    };
+
+    function loadMessages(chat_id) {
+      var deferred = $q.defer();
+      $http.get("api/conversations/" + chat_id + "/messages.json")
+        .then(function (result) {
+          deferred.resolve(result);
+        }, function (error) {
+          deferred.reject(error);
+        })
+      return deferred.promise;
+    }
+
+    function getUsers(){
+      var deferred = $q.defer();
+      $http.get("api/conversations.json")
+        .then(function (result) {
+          deferred.resolve(result);
+        }, function (error) {
+          deferred.reject(error);
+        })
+      return deferred.promise;
+    };
+
+    function getConversation(user) {
+      var deferred = $q.defer();
+      $http.post("api/conversations.json", {
+        sender_id:    credentials.id,
+        recipient_id: user.id
+      }).then(function (result) {
+          deferred.resolve(result);
+        }, function (error) {
+          deferred.reject(error);
+        })
+      return deferred.promise;
+    };
+
+    return {
+      getUsers: getUsers,
+      getConversation: getConversation,
+      loadMessages: loadMessages,
+      sendMessage: sendMessage,
+      publishMessage: publishMessage
+    };
+  })
+
   .factory('authFactory', function($http, $q, $window) {
     var userInfo;
 
@@ -96,6 +212,7 @@ angular.module('chatApp', ['ngRoute'])
         }
       }).then(function(result) {
         userInfo = {
+          id: result.data.id,
           token: result.data.token,
           email: result.data.user
         };
