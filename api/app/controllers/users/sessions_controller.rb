@@ -7,7 +7,7 @@ class Users::SessionsController < Devise::SessionsController
     yield resource if block_given?
 
     token = AuthToken.issue_token({ user_id: resource.id })
-    render json: {user: resource.email, token: token}
+    render json: {id: resource.id, user: resource.email, token: token}
   end
 
 end
