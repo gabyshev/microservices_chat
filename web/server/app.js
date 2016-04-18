@@ -13,9 +13,9 @@ var app = express();
 var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 25});
 var jsonParser = bodyParser.json();
 
-// конфииги приложения
-// api_url - урл API сервера. Если запущено через docker-compose, запросы будут идти на прилинкованный конейтнер
-// root_path - путь до папки /server, нужно чобы отдавать статику
+// application configuration
+// api_url - API server url. If run with docker compose requests will go to RoR container
+// root_path - path to static files
 var config = {
   api_uri: process.env.MICROSERVICESCHAT_API_1_PORT_3000_TCP || "http://localhost:3000",
   root_path:  path.normalize(__dirname + '/..')
@@ -26,7 +26,7 @@ app.use(morgan('combined'));
 app.use(express.static(path.join(config.root_path, 'public')));
 app.set('appPath', path.join(config.root_path, 'public'));
 
-// Прокси сервер, нужен для пересылки всех API запросов на прилинкованный контейнер с рельсами
+// proxy server. necessary for sending API requests to RoR docker container
 var apiProxy = httpProxy.createProxyServer();
 apiProxy.on('error', function (err, req, res) {
   console.log("connection problem");
@@ -34,19 +34,19 @@ apiProxy.on('error', function (err, req, res) {
   res.end(err.message);
 })
 
-// Урл по которому происходит  Publish в вебсокет каналы
+// url where publishing to websocket channels happen
 app.post('/message', jsonParser, function (req, res) {
   bayeux.getClient().publish('/conversation/' + req.body.conversation_id, req.body.message);
   res.sendStatus(200);
 });
 
-// Урл на который будут идти все запросы с фронтенда, предназначенные для работы с пользователями (логин, сообщения)
+// url responsible for business logic, will proxy requests to RoR docker container
 app.all('/api/*', function (req, res) {
   req.url = req.url.replace(/\/api/, '');
   apiProxy.web(req, res, { target: config.api_uri });
 });
 
-// в остальных случаях рендерится index.html
+// in all other cases render static files
 app.route('/*').get(function (req, res) {
   res.sendFile(path.join(app.get('appPath'), 'index.html'));
 });

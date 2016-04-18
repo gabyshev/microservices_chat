@@ -5,8 +5,6 @@ class ApplicationController < ActionController::Base
 
   protected
 
-  # проверка валидности предоставленного токена в контроллерах,
-  # если токен валидный - авторизуем пользователя (sign_in)
   def verify_jwt_token
     return head :unauthorized if auth_headers.nil? || !AuthToken.valid?(provided_token)
     sign_in(:user, User.find_by(email: provided_email))
