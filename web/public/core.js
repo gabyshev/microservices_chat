@@ -1,6 +1,6 @@
 angular.module('chatApp', ['ngRoute'])
-  // если запрос не авторизованный, перенаправлять на sign_in
-  // будучи не авторизованным пользователь может посетить только sign_in или sign_up
+  // if request is not authorized redirect it to sign_in
+  // as anonymous user can visit only sign_in and sign_up
   .run(["$rootScope", "$location", function ($rootScope, $location) {
     $rootScope.$on("$routeChangeError", function (event, current, previous, eventObj) {
       if (eventObj.authenticated === false) {
@@ -11,13 +11,15 @@ angular.module('chatApp', ['ngRoute'])
 
   .controller('MainCtrl', function($scope, $location) {
   })
-  // основной контроллер реализующий логику чата
+  // main controller implementing chat logic
   .controller('ChatCtrl', ["$scope", "chatFactory", function($scope, chatFactory) {
     $scope.websocket_client = new Faye.Client("/faye");
     $scope.currentChat = null;
     $scope.currentSubscription = null;
 
-    // если объет "текущий чат" меняется, то отписывается от текущей подписки на канал и подписываемся на новый
+    // if current chat object is changed
+    //  - cancel current subscribtion
+    //  - subscribe to new channel
     $scope.$watch("currentChat", function (newValue, oldValue) {
       if (newValue === oldValue) {
         return;
@@ -31,7 +33,7 @@ angular.module('chatApp', ['ngRoute'])
       });
     });
 
-    // при инициализации контроллера подтягиваем сразу список доступных для чата пользователей
+    // At controller initialisation get other users available for chat
     function activate() {
       chatFactory.getUsers().then(function (result){
         $scope.users = result.data;
@@ -58,10 +60,10 @@ angular.module('chatApp', ['ngRoute'])
       })
     }
 
-    //  инициализируем чат контроллер
+    //  initialize chat controller
     activate();
   }])
-  // контроллеры SignUpCtrl и SignInCtrl  тянут запросы по авторизации и регистрации с фактори authFactory
+  // controllers SignUpCtrl and SignInCtrl requesting authorization and authentication from authFactory
   .controller('SignUpCtrl', ["$scope", "$location", "authFactory", function ($scope, $location, authFactory) {
     $scope.signUp = function () {
       authFactory.signUp($scope.email, $scope.password, $scope.passwordConfirmation)
@@ -87,8 +89,8 @@ angular.module('chatApp', ['ngRoute'])
     };
   }])
 
-  // Роуты фронтенд приложеиня
-  // без авторизации можно зайти только на sign_up/sign_in в остальных случаях будет редирект на sign_in
+  // Front end routes
+  // anonymously user can visist only  sign_up/sign_in in all other cases he will be redirected to sign_in
   .config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode({enabled: true, requireBase: false});
     $routeProvider
@@ -130,14 +132,14 @@ angular.module('chatApp', ['ngRoute'])
       })
   })
 
-  // Фактори для работы с базой Чатов(Conversation) и Сообщений
+  // Factory for Conversations and Messages
   .factory('chatFactory', function ($http, $q, authFactory) {
     var credentials = authFactory.getUserInfo();
-    // Передаем в хедерах аутентификационные данные вида:
+    // Puts auth headers in format:
     // Authorization: Bearer my@email.ru MYTOKEN
     $http.defaults.headers.common.Authorization = "Bearer " + credentials.email + " " + credentials.token;
 
-    // Паблиш сообщения по вебсокетам
+    // Publish new message in websockets channel
     function publishMessage(data) {
       $http.post("/message", {
         conversation_id: data.conversation_id,
@@ -149,7 +151,9 @@ angular.module('chatApp', ['ngRoute'])
     };
 
     // При общении с API сервер используется  Deferred объекты
-    // функция создания сообщения в чате
+    // To communicate with API I used Deferred objects
+
+    // creating message in a chat
     function sendMessage(chat_id, messageBody) {
       var deferred = $q.defer();
       $http.post("api/conversations/" + chat_id + "/messages.json", {
@@ -166,7 +170,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     };
 
-    // подгрузка сообщений с текущего чата
+    // loading messages from current conversation
     function loadMessages(chat_id) {
       var deferred = $q.defer();
       $http.get("api/conversations/" + chat_id + "/messages.json")
@@ -178,7 +182,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     }
 
-    //  подгрузка доступных юзеров для чата
+    // loading available users for chat
     function getUsers(){
       var deferred = $q.defer();
       $http.get("api/conversations.json")
@@ -190,7 +194,7 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     };
 
-    // получаение объекта Conversation
+    // getting Conversation object
     function getConversation(user) {
       var deferred = $q.defer();
       $http.post("api/conversations.json", {
@@ -213,12 +217,12 @@ angular.module('chatApp', ['ngRoute'])
     };
   })
 
-  // Фактори отвечающий за регистрацию и логин пользователей
+  // Factory responsible for registation and login
   .factory('authFactory', function($http, $q, $window) {
     var userInfo;
 
-    // в  userInfo лежит информация о текущей сессии пользователя: токен, почта и id пользователя
-    // переменная userInfo инициализируется сразу, наполняется данными при успешном логине и сохраняется в SessionStorage браузера
+    // userInfo consist information about current session: token, email, user's id
+    // userInfo initializes immidiately and filled with information after successfull login and saved in browser's SessionStorage
     function getUserInfo() {
       return userInfo;
     }
@@ -264,8 +268,8 @@ angular.module('chatApp', ['ngRoute'])
       return deferred.promise;
     }
 
-    // в userInfo всегда лежат актуальные данные, например при рефреше страницы
-    // функция init() обновляет переменную
+    // userInfo always consist actual information
+    // init() function refreshes the variable
     function init() {
       if ($window.sessionStorage["userInfo"]) {
         userInfo = JSON.parse($window.sessionStorage["userInfo"]);
