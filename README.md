@@ -49,8 +49,9 @@ If you run application from OS X check your env var $DOCKER_HOST and open it. Fr
 ### Suggested improvements
 
 1. Tests will be implemented later.
-2. Error processing. In my case due to testing purposes in most cases I do not process errors. In the real application you should always process possible errors.
-3. Docker Compose is not for production environment. Depending on the size of you application there are many Orchestration tools.
-4. For easy reading I leaved whole AngularJS application in one `core.js` file. In the production environment the application will grow so you should organize it into different files.
-5. Mircoservices architecture assumes you have automated containers monitoring tool.
-6. Additional security enhancement for Node.js container. Right now anyone can POST into `/messages` and thus can break into conversation. I think the possible solution can be securing conversation channels by hashing `CONVERSATION_ID` so that hacker wont guess it.
+2. Due to demonstration purposes I used one repo for Node.js and RoR applications. Usually in real world different teams will work on that application. Therefore you should split them into different repos.
+3. Error processing. In my case due to testing purposes in most cases I do not process errors. In the real application you should always process possible errors.
+4. Docker Compose is not for production environment. Depending on the size of you application there are many Orchestration tools.
+5. For easy reading I leaved whole AngularJS application in one `core.js` file. In the production environment the application will grow so you should organize it into different files.
+6. Mircoservices architecture assumes you have automated containers monitoring tool.
+7. Additional security enhancement for Node.js container. Right now anyone can POST into `/messages` and thus can break into conversation. I think the possible solution can be securing conversation channels by hashing `CONVERSATION_ID` so that hacker wont guess it.
