@@ -10,17 +10,17 @@ Functions:
 - Logged user can chat with other  users.
 - Chat allow user to send and receive messages.
 
-Realization:
+Implementation:
 - application should consist 2 microservices
   - First microservice - Ruby on Rails application implementing business logic
   - Second microservice - Node.js application implementing char and async websockets
 
-###  Realization
+###  Implementation
 
 ##### Ruby on Rails app microservice (**API**)
 
 This microservice is responsible for user management and storing/sending conversation data among users.
-Communication between docker containers is implemented via REST JSON API. Every successfully logged in user get [JWT](http://jwt.io/) token from the server. `Conversations` and `Messages` controllers authorize user through `verify_jwt_token` method.
+Communication between docker containers is implemented via REST JSON API. Every successfully logged-in user gets [JWT](http://jwt.io/) token from the server. `Conversations` and `Messages` controllers authorize user through `verify_jwt_token` method.
 
 ##### Node.js app microservice (**WEB**)
 
@@ -54,4 +54,4 @@ If you run application from OS X check your env var $DOCKER_HOST and open it. Fr
 4. Docker Compose is not for production environment. Depending on the size of you application there are many Orchestration tools.
 5. For easy reading I leaved whole AngularJS application in one `core.js` file. In the production environment the application will grow so you should organize it into different files.
 6. Mircoservices architecture assumes you have automated containers monitoring tool.
-7. Additional security enhancement for Node.js container. Right now anyone can POST into `/messages` and thus can break into conversation. I think the possible solution can be securing conversation channels by hashing `CONVERSATION_ID` so that hacker wont guess it.
+7. Additional security enhancement for Node.js container. Right now anyone can POST into `/messages` and thus can break into conversation. I think the possible solution can be securing conversation channels by hashing `CONVERSATION_ID` so that hacker won't guess it.
